@@ -1,27 +1,83 @@
-# Maven
+# =============================================================================
+# .gitignore for Advertising Agency Management System (Spring Boot / Maven)
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# SECRETS & LOCAL CONFIG — never commit these
+# ---------------------------------------------------------------------------
+application-local.properties
+*.local.properties
+.env
+.env.*
+!.env.template
+*.secret
+*.secrets
+secrets/
+credentials/
+
+# ---------------------------------------------------------------------------
+# Maven build output
+# ---------------------------------------------------------------------------
 target/
 !.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
 
-# IDE
+# ---------------------------------------------------------------------------
+# IDE — IntelliJ IDEA
+# ---------------------------------------------------------------------------
 .idea/
 *.iws
 *.iml
 *.ipr
-.vscode/
+out/
+
+# IDE — Eclipse / STS
 .settings/
 .classpath
 .project
+.springBeans
+.sts4-cache
 
-# OS
+# IDE — VS Code
+.vscode/
+*.code-workspace
+
+# IDE — NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ---------------------------------------------------------------------------
+# OS generated files
+# ---------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
+# ---------------------------------------------------------------------------
 # Logs
+# ---------------------------------------------------------------------------
 *.log
+logs/
+spring.log
 
-# Local env / secrets
-application-local.properties
-.env
+# ---------------------------------------------------------------------------
+# Java / Spring Boot
+# ---------------------------------------------------------------------------
+hs_err_pid*
+replay_pid*
 
+# ---------------------------------------------------------------------------
 # Node (if a separate frontend build step is added later)
+# ---------------------------------------------------------------------------
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
