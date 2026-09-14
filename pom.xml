@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -15,7 +15,7 @@
     <artifactId>advertising-agency-management-system</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>advertising-agency-management-system</name>
-    <description>Web-Based Advertising Agency Management System - Y2-S1-MLB-B9G2-08</description>
+    <description>Web-Based Advertising Agency Management System </description>
 
     <properties>
         <java.version>17</java.version>
