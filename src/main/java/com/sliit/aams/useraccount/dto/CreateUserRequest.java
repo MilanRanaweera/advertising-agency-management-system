@@ -1,46 +1,40 @@
 package com.sliit.aams.useraccount.dto;
 
-import java.time.LocalDateTime;
+import jakarta.validation.constraints.*;
 
 /**
  * Owner: Jayalath M.P.M.P.A. (IT25102962)
- * Response DTO — all user fields except password.
+ * Request DTO for creating / updating a user account.
  */
-public class UserDto {
+public class CreateUserRequest {
 
-    private Long id;
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name must not exceed 50 characters")
     private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name must not exceed 50 characters")
     private String lastName;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
+
+    @Size(max = 15, message = "Phone number must not exceed 15 characters")
+    @Pattern(regexp = "^[+]?[0-9]{7,15}$", message = "Phone number must be valid")
     private String phone;
+
+    @NotBlank(message = "Role is required")
     private String role;
+
+    @NotBlank(message = "Status is required")
     private String status;
-    private LocalDateTime createdAt;
 
-    public UserDto() {
-    }
-
-    public UserDto(Long id, String firstName, String lastName, String email,
-                   String phone, String role, String status, LocalDateTime createdAt) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.phone = phone;
-        this.role = role;
-        this.status = status;
-        this.createdAt = createdAt;
-    }
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters")
+    private String password;
 
     // ── Getters & Setters ──────────────────────────────────────────
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -90,11 +84,11 @@ public class UserDto {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getPassword() {
+        return password;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

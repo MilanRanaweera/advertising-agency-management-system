@@ -1,10 +1,33 @@
 package com.sliit.aams.security;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
 /**
- * TODO: Add Spring Security configuration (roles: Customer, Registered
- * Customer, Admin/Agency Administrator, Marketing Manager, Finance &
- * Operations Executive, Managing Director, Designer, Customer Relations
- * Officer) once the Login/Role-based access control use case is built.
+ * Spring Security configuration.
+ * Permits all requests for development. Roles to be configured as login/access control is built.
  */
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
