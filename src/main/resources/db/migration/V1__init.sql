@@ -1,0 +1,3 @@
+-- Placeholder Flyway/SQL migration.
+-- Each member can add their module's tables here (or as V2, V3, ... files)
+-- once schema for their use case is finalized.
