@@ -1,25 +1,28 @@
 package com.sliit.aams.useraccount.controller;
 
+
+
+import com.sliit.aams.common.exception.ApiResponse;
+import com.sliit.aams.useraccount.dto.UpdateProfileRequest;
 import com.sliit.aams.useraccount.model.User;
-import com.sliit.aams.useraccount.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sliit.aams.useraccount.service.UserAccountService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-/**
- * Owner: Jayalath M.P.M.P.A. (IT25102962)
- * REST endpoints for the useraccount module.
- */
 @RestController
-@RequestMapping("/api/useraccount")
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
+    private final UserAccountService svc;
 
-    @Autowired
-    private UserService userService;
+    @GetMapping("/me")
+    public ApiResponse<User> me(@RequestHeader("X-User-Id") Long userId) {
+        return ApiResponse.ok(svc.getById(userId));
+    }
 
-    @GetMapping
-    public List<User> getAll() {
-        return userService.findAll();
+    @PutMapping("/me")
+    public ApiResponse<User> update(@RequestHeader("X-User-Id") Long userId,
+                                       @RequestBody UpdateProfileRequest req) {
+        return ApiResponse.ok("Profile updated", svc.updateProfile(userId, req));
     }
 }

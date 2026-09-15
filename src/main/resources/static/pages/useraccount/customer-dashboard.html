@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAMS – Customer Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--deep); padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto;}
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 1.2rem; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; margin-top: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge.green { background: rgba(0,206,201,0.2); color: var(--green); }
+    .badge.orange { background: rgba(240,165,0,0.2); color: var(--gold); }
+    
+    .timeline { margin-top: 20px; padding-left: 20px; border-left: 2px solid var(--border); }
+    .timeline-item { position: relative; margin-bottom: 15px; }
+    .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--purple); }
+    .timeline-date { font-size: 0.75rem; color: var(--muted); }
+    .timeline-content { background: var(--glass); padding: 10px; border-radius: 6px; margin-top: 5px; }
+    .proto-img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">AAMS</div>
+    <div class="brand-text"><strong>AAMS</strong><span>Customer Portal</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="userInitial">C</div>
+    <div class="user-meta"><strong id="userName">Customer</strong><span id="userRole">Customer</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item active" onclick="showSection('dashboard', this)"><i class="fa-solid fa-house"></i>Dashboard</a>
+    <a class="nav-item" onclick="showSection('packages', this)"><i class="fa-solid fa-box-open"></i>Packages</a>
+    <div class="nav-section-label">My Account</div>
+    <a class="nav-item" onclick="showSection('quotations', this)"><i class="fa-solid fa-file-invoice"></i>Quotations</a>
+    <a class="nav-item" onclick="showSection('projects', this)"><i class="fa-solid fa-diagram-project"></i>My Projects</a>
+    <a class="nav-item" onclick="showSection('invoices', this)"><i class="fa-solid fa-receipt"></i>Invoices &amp; Payments</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="topbar-right">
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD SECTION ── -->
+    <section id="sec-dashboard">
+      <div class="stats-row">
+        <div class="kpi">
+          <div class="kpi-icon gold"><i class="fa-solid fa-diagram-project"></i></div>
+          <div class="kpi-info"><strong id="kpi-projects">—</strong><span>Active Projects</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-icon red"><i class="fa-solid fa-circle-exclamation"></i></div>
+          <div class="kpi-info"><strong id="kpi-unpaid">—</strong><span>Outstanding Invoices</span></div>
+        </div>
+      </div>
+      
+      <div class="section-card" style="margin-top: 20px;">
+        <div class="section-header">
+          <h3>Recent Projects</h3>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#ID</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="dashProjectsBody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── INQUIRIES ── -->
+    <section id="sec-inquiries" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3><i class="fa-solid fa-circle-question" style="color:var(--orange)"></i> My Inquiries</h3>
+        </div>
+        
+        <form onsubmit="submitInquiry(event)" style="margin-bottom: 20px; background:var(--glass); padding:20px; border-radius:12px; border:1px solid var(--border);">
+          <h4 style="margin-bottom: 15px;">Ask a Question</h4>
+          <div class="form-group">
+            <label>Subject / Category</label>
+            <input type="text" id="newInqSubject" required placeholder="e.g. Design Feedback, Payment Issue..." />
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="newInqMessage" rows="3" required placeholder="Explain your inquiry..."></textarea>
+          </div>
+          <button type="submit" class="btn-submit" style="width: auto; padding: 10px 20px;">Submit Inquiry</button>
+        </form>
+
+        <table class="data-table">
+          <thead><tr><th>#ID</th><th>Subject</th><th>Date</th><th>Status</th><th>Responses</th></tr></thead>
+          <tbody id="inquiriesBody"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── QUOTATIONS ── -->
+    <section id="sec-quotations" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3><i class="fa-solid fa-file-invoice" style="color:var(--purple)"></i> My Quotations</h3>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#ID</th><th>Date</th><th>Status</th><th>Items</th></tr></thead>
+          <tbody id="quotesBody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── PROJECTS ── -->
+    <section id="sec-projects" class="hidden">
+      <div class="section-card">
+        <div class="section-header"><h3><i class="fa-solid fa-diagram-project" style="color:var(--gold)"></i> My Projects</h3></div>
+        <table class="data-table">
+          <thead><tr><th>#ID</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="projectsBody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── INVOICES ── -->
+    <section id="sec-invoices" class="hidden">
+      <div class="section-card">
+        <div class="section-header"><h3><i class="fa-solid fa-receipt" style="color:var(--green)"></i> Invoices &amp; Payments</h3></div>
+        <table class="data-table">
+          <thead><tr><th>#ID</th><th>Issue Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="invoicesBody"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+
+<!-- View Project Details Modal (Prototypes & Feedback) -->
+<div class="modal" id="viewProjectModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <span id="vpTitle">Project Details</span>
+      <button class="modal-close" onclick="closeViewProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="vpContent">
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Prototypes</h4>
+      <div id="vpPrototypes"></div>
+      
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Feedback</h4>
+      <form onsubmit="submitCustomerFeedback(event)" style="margin-top: 10px;">
+        <textarea id="custFeedbackText" class="form-group" style="width: 100%; background:rgba(255,255,255,0.05); color:#fff; padding:10px; border-radius:6px; border:1px solid var(--border);" rows="3" placeholder="Leave feedback on the prototype..." required></textarea>
+        <button type="submit" class="btn-submit" style="padding: 8px;">Add Feedback</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Pay Invoice Modal -->
+<div class="modal" id="payModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="payTitle">Pay Invoice</span>
+      <button class="modal-close" onclick="closePayModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form onsubmit="submitPayment(event)">
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select id="payMethod" required>
+          <option value="CREDIT_CARD">Credit Card</option>
+          <option value="ONLINE_PAYMENT">Online Payment (PayPal/Stripe)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Card / Account Number</label>
+        <input type="text" placeholder="XXXX-XXXX-XXXX-XXXX" required/>
+      </div>
+      <button type="submit" class="btn-submit">Pay Now</button>
+    </form>
+  </div>
+</div>
+
+
+<script src="/js/dash-shared.js"></script>
+<script>
+  const formatStatus = s => s === "IN_PROGRESS" ? "In Progress" : (s === "DONE" ? "Done" : (s === "COMPLETED" ? "Completed" : s));
+const userStr = localStorage.getItem('aams_user');
+if (!userStr) window.location.href='/login.html';
+const user = JSON.parse(userStr);
+
+let currentViewProjectId = null;
+let currentPayInvoiceId = null;
+let currentPayAmount = null;
+
+const sections = ['dashboard','packages','quotations','projects','invoices'];
+function showSection(name, el) {
+  sections.forEach(s => {
+    const sec = document.getElementById('sec-'+s);
+    if (sec) sec.classList.toggle('hidden', s !== name);
+  });
+  if(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  if (name === 'packages')   loadPackages();
+  if (name === 'quotations') loadQuotations();
+  if (name === 'projects')   loadProjects();
+  if (name === 'invoices')   loadInvoices();
+}
+
+async function loadDashboard() {
+  
+  loadProjects(true);
+  loadInvoices(true);
+}
+
+async function loadPackages() {
+  try {
+    const res = await fetch('/api/packages');
+    const pkgs = (await res.json()).data || [];
+    document.getElementById('packagesGrid').innerHTML = pkgs.map(p => `
+      <div class="kpi" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div class="kpi-icon gold"><i class="fa-solid fa-box-open"></i></div>
+        <strong>${p.packageName}</strong>
+        <span style="color:var(--gold);font-weight:800;font-size:1.1rem">LKR ${Number(p.price).toLocaleString()}</span>
+        <button class="btn-submit" onclick="requestToBuy(${p.packageId}, ${p.price})" style="padding:8px; font-size:0.8rem; margin-top:5px;">Request to Buy</button>
+      </div>`).join('');
+  } catch { document.getElementById('packagesGrid').innerHTML = '<div class="empty"><p>Could not load packages</p></div>'; }
+}
+
+async function requestToBuy(pkgId, price) {
+  try {
+    const payload = {
+      customerId: user.userId,
+      items: [{ serviceId: pkgId, quantity: 1, unitPrice: price, discount: 0 }]
+    };
+    const res = await fetch('/api/quotations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    if(res.ok) {
+      alert("Quotation requested successfully!");
+      showSection('quotations');
+      loadQuotations();
+    }
+  } catch(e) { alert("Error requesting quotation"); }
+}
+
+async function loadQuotations() {
+  try {
+    const res = await fetch(`/api/quotations/my`, { headers: {'X-User-Id': user.userId} });
+    const qs = (await res.json()).data || [];
+    document.getElementById('quotesBody').innerHTML = qs.length
+      ? qs.map(q => `<tr><td>#${q.qId}</td><td>${q.qDate}</td><td><span class="badge ${q.status==='APPROVED'?'green':'orange'}">${q.status}</span></td><td>${(q.items||[]).length} item(s)</td></tr>`).join('')
+      : '<tr><td colspan="4" class="empty">No quotations yet</td></tr>';
+  } catch { document.getElementById('quotesBody').innerHTML = '<tr><td colspan="4" class="empty">Error loading quotations</td></tr>'; }
+}
+
+async function loadProjects(dashboardOnly = false) {
+  try {
+    const res = await fetch(`/api/projects/my`, { headers: {'X-User-Id': user.userId} });
+    const projs = (await res.json()).data || [];
+    
+    document.getElementById('kpi-projects').textContent = projs.length;
+    
+    if(!dashboardOnly) {
+      
+      document.getElementById('projectsBody').innerHTML = projs.length
+        ? projs.map(p => `<tr><td>#${p.projectId}</td><td>${p.startDate}</td><td><span class="badge ${p.status==='DONE'?'green':'orange'}">${formatStatus(p.status)}</span></td>
+            <td><button onclick="openViewProjectModal(${p.projectId})" style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px; cursor:pointer;">View</button>
+            ${p.status==='DONE'?`<button onclick="downloadLatestDesign(${p.projectId})" style="padding:4px 8px; border:1px solid var(--green); background:rgba(0,206,201,0.2); color:var(--green); border-radius:4px; cursor:pointer; margin-left:4px;"><i class='fa-solid fa-download'></i> Download</button>`:''}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="4" class="empty">No projects yet</td></tr>';
+    } else {
+      
+      document.getElementById('dashProjectsBody').innerHTML = projs.length
+        ? projs.slice(0, 5).map(p => `<tr><td>#${p.projectId}</td><td>${p.startDate}</td><td><span class="badge ${p.status==='DONE'?'green':'orange'}">${formatStatus(p.status)}</span></td>
+            <td><button onclick="openViewProjectModal(${p.projectId})" style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px; cursor:pointer;">View</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="4" class="empty">No recent projects</td></tr>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function loadInvoices(dashboardOnly = false) {
+  try {
+    const res = await fetch(`/api/payments/invoices`);
+    let invs = (await res.json()).data || [];
+    
+    // In a real app we'd filter by customer. For demo we'll assume they're all theirs or filter by qId linked to customer
+    // But since there's no customerId directly on invoice in this schema, we just show all unpaid for demo
+    invs = invs.filter(i => i.paymentStatus !== 'PAID'); 
+    
+    document.getElementById('kpi-unpaid').textContent = invs.length;
+    
+    if(!dashboardOnly) {
+      document.getElementById('invoicesBody').innerHTML = invs.length
+        ? invs.map(i => `<tr><td>#${i.invoiceId}</td><td>${i.issueDate}</td><td>${i.totalAmount}</td><td><span class="badge orange">${i.paymentStatus}</span></td>
+            <td><button onclick="openPayModal(${i.invoiceId}, ${i.totalAmount})" style="padding:4px 8px; border:1px solid var(--border); background:var(--green); color:#fff; border-radius:4px; cursor:pointer;">Pay Now</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" class="empty">No pending invoices</td></tr>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+function openViewProjectModal(id) {
+  currentViewProjectId = id;
+  document.getElementById('viewProjectModal').classList.add('active');
+  document.getElementById('vpTitle').textContent = 'Project #' + id;
+  loadProjectDetails(id);
+}
+function closeViewProjectModal() {
+  document.getElementById('viewProjectModal').classList.remove('active');
+}
+
+async function loadProjectDetails(pid) {
+  document.getElementById('vpPrototypes').innerHTML = 'Loading...';
+  try {
+    const [protoRes, progRes] = await Promise.all([
+      fetch(`/api/projects/${pid}/prototypes`),
+      fetch(`/api/projects/${pid}/progress`)
+    ]);
+    if (!protoRes.ok || !progRes.ok) throw new Error('Server error');
+    const protos = (await protoRes.json()).data || [];
+    const progs = (await progRes.json()).data || [];
+    
+    let phtml = protos.length === 0 ? '<p class="timeline-date" style="margin-top:10px;">No prototypes uploaded yet.</p>' : '';
+    protos.forEach(p => {
+      phtml += `
+        <div style="background:var(--glass); padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+          <div style="font-size:0.8rem; color:var(--muted);">${new Date(p.uploadDate).toLocaleString()}</div>
+          <div style="margin:6px 0; font-size:0.9rem;"><strong>Version:</strong> ${p.version} &nbsp;
+            <span class="badge ${p.status === 'APPROVED' ? 'green' : 'orange'}">${formatStatus(p.status)}</span>
+          </div>
+          ${p.comment ? `<div style="font-size:0.85rem; color:var(--muted);">Designer Note: ${p.comment}</div>` : ''}
+          ${p.fileUrl ? `<img src="${p.fileUrl}" class="proto-img"/>` : ''}
+          ${p.status !== 'APPROVED' ? `<button onclick="approvePrototype(${p.prototypeId})" style="margin-top:10px; padding:4px 8px; border:1px solid var(--green); background:rgba(0,206,201,0.2); color:var(--green); border-radius:4px; cursor:pointer;">✅ Approve Prototype</button>` : '<div style="margin-top:8px; font-size:0.85rem; color:var(--green);">✅ Approved by you</div>'}
+        </div>
+      `;
+    });
+    
+    if(progs.length > 0) {
+      phtml += `<h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Progress & Feedback</h4><div class="timeline">`;
+      progs.forEach(pr => {
+        const isFeedback = (pr.comment || '').startsWith('[Customer Feedback]');
+        const isMD = (pr.comment || '').startsWith('[MD Feedback]');
+        const label = isFeedback ? '👤 You (Feedback)' : isMD ? '📋 Managing Director' : '🎨 Designer';
+        phtml += `
+          <div class="timeline-item">
+            <div class="timeline-date">${new Date(pr.dateTime).toLocaleString()} &nbsp;<strong>${label}</strong></div>
+            <div class="timeline-content">${pr.comment || ''}</div>
+          </div>`;
+      });
+      phtml += '</div>';
+    }
+    
+    document.getElementById('vpPrototypes').innerHTML = phtml;
+  } catch(err) {
+    document.getElementById('vpPrototypes').innerHTML = `<span style="color:red"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load: ${err.message}</span>`;
+  }
+}
+
+async function approvePrototype(protoId) {
+  try {
+    await fetch(`/api/projects/prototypes/${protoId}/approve`, { method: 'POST', headers: {'X-User-Id': user.userId} });
+    loadProjectDetails(currentViewProjectId);
+  } catch(e) {}
+}
+
+async function submitCustomerFeedback(e) {
+  e.preventDefault();
+  const text = document.getElementById('custFeedbackText').value;
+  try {
+    await fetch(`/api/projects/${currentViewProjectId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': user.userId },
+      body: JSON.stringify({ comment: `[Customer Feedback] ${text}`, completionPercentage: 0 })
+    });
+    document.getElementById('custFeedbackText').value = '';
+    loadProjectDetails(currentViewProjectId);
+  } catch(err) { alert("Error adding feedback"); }
+}
+
+function openPayModal(invId, amt) {
+  currentPayInvoiceId = invId;
+  currentPayAmount = amt;
+  document.getElementById('payModal').classList.add('active');
+  document.getElementById('payTitle').textContent = `Pay Invoice #${invId} (LKR ${amt})`;
+}
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('active');
+}
+
+async function submitPayment(e) {
+  e.preventDefault();
+  try {
+    await fetch(`/api/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoiceId: currentPayInvoiceId, amountPaid: currentPayAmount, paymentMethod: document.getElementById('payMethod').value })
+    });
+    alert("Payment successful!");
+    closePayModal();
+    loadInvoices();
+    loadDashboard();
+  } catch(err) { alert("Payment failed"); }
+}
+
+async function submitInquiry(e) {
+  e.preventDefault();
+  const subject = document.getElementById('newInqSubject').value;
+  const msg = document.getElementById('newInqMessage').value;
+  try {
+    const res = await fetch('/api/communication/inquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': user.userId },
+      body: JSON.stringify({ subject: subject })
+    });
+    const inq = (await res.json()).data;
+    await fetch(`/api/communication/inquiries/${inq.inquiryId}/responses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': user.userId },
+      body: JSON.stringify({ responseText: msg })
+    });
+    alert("Inquiry submitted!");
+    document.getElementById('newInqSubject').value = '';
+    document.getElementById('newInqMessage').value = '';
+    loadInquiries();
+  } catch(err) { alert("Failed to submit inquiry"); }
+}
+
+async function loadInquiries() {
+  try {
+    const res = await fetch('/api/communication/inquiries/my', { headers: {'X-User-Id': user.userId} });
+    const inqs = (await res.json()).data || [];
+    document.getElementById('inquiriesBody').innerHTML = inqs.length
+      ? inqs.map(i => `<tr><td>#${i.inquiryId}</td><td>${i.subject}</td><td>${new Date(i.createdAt).toLocaleDateString()}</td><td><span class="badge ${i.status==='OPEN'?'orange':i.status==='CLOSED'?'green':'purple'}">${i.status}</span></td><td><button onclick="alert('View responses from your inbox.')" style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px;">View</button></td></tr>`).join('')
+      : '<tr><td colspan="5" class="empty">No inquiries found</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+async function downloadLatestDesign(projectId) {
+  try {
+    const res = await fetch('/api/projects/' + projectId + '/prototypes');
+    if (!res.ok) throw new Error('Could not fetch prototypes');
+    const protos = (await res.json()).data || [];
+    if (protos.length === 0) return alert('No prototype has been uploaded for this project yet.');
+    // Prefer approved prototype; otherwise take the latest upload
+    const target = protos.find(p => p.status === 'APPROVED') || protos[protos.length - 1];
+    if (!target.fileUrl) return alert('The prototype does not have an image attached yet.');
+    // If it is a base64 data URL, trigger a download
+    const a = document.createElement('a');
+    a.href = target.fileUrl;
+    a.download = 'Design_Project_' + projectId + '_' + (target.version || 'v1') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(e) {
+    alert('Could not download design: ' + e.message);
+  }
+}
+
+loadDashboard();
+
+</script>
+</body>
+</html>

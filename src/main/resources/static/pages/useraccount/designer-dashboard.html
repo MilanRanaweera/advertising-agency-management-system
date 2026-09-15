@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAMS - Designer Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--deep); padding: 24px; border-radius: 12px; width: 100%; max-width: 540px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto;}
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 1.2rem; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; margin-top: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge.green { background: rgba(0,206,201,0.2); color: var(--green); }
+    .badge.orange { background: rgba(240,165,0,0.2); color: var(--gold); }
+    .timeline { margin-top: 10px; padding-left: 20px; border-left: 2px solid var(--border); }
+    .timeline-item { position: relative; margin-bottom: 15px; }
+    .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--purple); }
+    .timeline-date { font-size: 0.75rem; color: var(--muted); }
+    .timeline-content { background: var(--glass); padding: 10px; border-radius: 6px; margin-top: 5px; }
+    .proto-img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
+    .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-sm { padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.82rem; border: 1px solid var(--border); background: var(--glass); color: #fff; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">AAMS</div>
+    <div class="brand-text"><strong>AAMS</strong><span>Designer Portal</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="userInitial">D</div>
+    <div class="user-meta"><strong id="userName">Designer</strong><span id="userRole">Designer</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" onclick="showSection('dashboard', this)"><i class="fa-solid fa-gauge"></i>Dashboard</a>
+    <div class="nav-section-label">Work</div>
+    <a class="nav-item" onclick="showSection('projects', this)"><i class="fa-solid fa-diagram-project"></i>My Projects</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Designer Dashboard</h1>
+    <div class="topbar-right">
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+    </div>
+  </div>
+  <div class="content">
+    <section id="sec-dashboard">
+      <div class="stats-row">
+        <div class="kpi"><div class="kpi-icon blue"><i class="fa-solid fa-diagram-project"></i></div><div class="kpi-info"><strong id="kpi-projects">-</strong><span>Assigned Projects</span></div></div>
+        <div class="kpi"><div class="kpi-icon green"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-info"><strong id="kpi-done">-</strong><span>Completed</span></div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header"><h3>My Active Projects</h3></div>
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Customer</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="projectsBody"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sec-projects" class="hidden">
+      <div class="section-card">
+        <div class="section-header"><h3>All My Projects</h3></div>
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Customer</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="allProjectsBody"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Upload Prototype Modal -->
+<div class="modal" id="protoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="protoTitle">Upload Prototype</span>
+      <button class="modal-close" onclick="closeProtoModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="protoForm" onsubmit="uploadPrototype(event)">
+      <div class="form-group">
+        <label>Select Image (PNG, JPG, max 8MB)</label>
+        <input type="file" id="protoImage" accept="image/png, image/jpeg" required/>
+      </div>
+      <div class="form-group">
+        <label>Version</label>
+        <input type="text" id="protoVersion" value="v1.0" required/>
+      </div>
+      <div class="form-group">
+        <label>Notes / Comments</label>
+        <textarea id="protoNotes" rows="3" placeholder="Explain the design..."></textarea>
+      </div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-upload"></i> Upload Prototype</button>
+    </form>
+  </div>
+</div>
+
+<!-- Update Progress Modal -->
+<div class="modal" id="progressModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="progTitle">Update Progress</span>
+      <button class="modal-close" onclick="closeProgressModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="progressForm" onsubmit="updateProgress(event)">
+      <div class="form-group">
+        <label>Project Status</label>
+        <select id="progProjStatus">
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="DONE">Done</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Progress Note</label>
+        <textarea id="progDesc" rows="3" placeholder="What did you complete today?" required></textarea>
+      </div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Save Progress</button>
+    </form>
+  </div>
+</div>
+
+<!-- View Project Details Modal -->
+<div class="modal" id="viewProjectModal">
+  <div class="modal-content" style="max-width: 620px;">
+    <div class="modal-header">
+      <span id="vpTitle">Project Details</span>
+      <button class="modal-close" onclick="closeViewProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="vpContent">
+      <h4 style="border-bottom: 1px solid var(--border); padding-bottom: 5px;">Prototypes</h4>
+      <div id="vpPrototypes"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Progress & Customer Feedback</h4>
+      <div id="vpTimeline"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/dash-shared.js"></script>
+<script>
+  const formatStatus = s => ({ IN_PROGRESS:'In Progress', DONE:'Done', COMPLETED:'Done', PENDING:'Pending', APPROVED:'Approved' }[s] || s);
+
+  let allUsers = [];
+  let myProjects = [];
+  let currentProjectId = null;
+  let currentViewProjectId = null;
+
+  function showSection(name, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    ['dashboard','projects'].forEach(id => {
+      const sec = document.getElementById('sec-' + id);
+      if (sec) sec.classList.toggle('hidden', id !== name);
+    });
+    document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  function openProtoModal(id) {
+    currentProjectId = id;
+    document.getElementById('protoModal').classList.add('active');
+    document.getElementById('protoTitle').textContent = 'Upload Prototype (Project #' + id + ')';
+  }
+  function closeProtoModal() {
+    document.getElementById('protoModal').classList.remove('active');
+    document.getElementById('protoForm').reset();
+  }
+
+  function openProgressModal(id) {
+    currentProjectId = id;
+    const proj = myProjects.find(p => p.projectId === id);
+    if (proj) document.getElementById('progProjStatus').value = (proj.status === 'DONE') ? 'DONE' : 'IN_PROGRESS';
+    document.getElementById('progressModal').classList.add('active');
+    document.getElementById('progTitle').textContent = 'Update Progress (Project #' + id + ')';
+  }
+  function closeProgressModal() {
+    document.getElementById('progressModal').classList.remove('active');
+    document.getElementById('progressForm').reset();
+  }
+
+  function openViewProjectModal(id) {
+    currentViewProjectId = id;
+    document.getElementById('viewProjectModal').classList.add('active');
+    document.getElementById('vpTitle').textContent = 'Project #' + id;
+    loadProjectDetails(id);
+  }
+  function closeViewProjectModal() {
+    document.getElementById('viewProjectModal').classList.remove('active');
+    currentViewProjectId = null;
+  }
+
+  async function init() {
+    try {
+      const u = getUser();
+      if (!u) return;
+      const [custRes, projRes] = await Promise.all([
+        fetch(API + '/api/admin/customers'),
+        fetch(API + '/api/projects')
+      ]);
+      if (!custRes.ok || !projRes.ok) throw new Error('Failed to load data');
+      allUsers = (await custRes.json()).data || [];
+      const allProjects = (await projRes.json()).data || [];
+      myProjects = allProjects.filter(p => p.designerId === u.userId);
+      renderDashboard();
+    } catch(err) {
+      console.error('Init error:', err);
+      document.getElementById('projectsBody').innerHTML = '<tr><td colspan="5" style="color:red;padding:12px;">Error loading data: ' + err.message + '</td></tr>';
+    }
+  }
+
+  function renderDashboard() {
+    const done = myProjects.filter(p => p.status === 'DONE').length;
+    document.getElementById('kpi-projects').textContent = myProjects.length;
+    document.getElementById('kpi-done').textContent = done;
+
+    const getUserName = id => {
+      const u = allUsers.find(x => x.userId === id);
+      return u ? (u.firstName + ' ' + u.lastName) : ('Customer #' + id);
+    };
+
+    const rowHTML = p => '<tr>' +
+      '<td>#' + p.projectId + '</td>' +
+      '<td>' + getUserName(p.customerId) + '</td>' +
+      '<td>' + (p.startDate || '—') + '</td>' +
+      '<td><span class="badge ' + (p.status === 'DONE' ? 'green' : 'orange') + '">' + formatStatus(p.status) + '</span></td>' +
+      '<td><div class="action-row">' +
+        '<button class="btn-sm" onclick="openProtoModal(' + p.projectId + ')"><i class="fa-solid fa-upload"></i> Prototype</button>' +
+        '<button class="btn-sm" onclick="openProgressModal(' + p.projectId + ')"><i class="fa-solid fa-pen"></i> Progress</button>' +
+        '<button class="btn-sm" onclick="openViewProjectModal(' + p.projectId + ')"><i class="fa-solid fa-eye"></i> View</button>' +
+      '</div></td>' +
+    '</tr>';
+
+    const tableHTML = myProjects.length ? myProjects.map(rowHTML).join('') : '<tr><td colspan="5" class="empty">No projects assigned to you.</td></tr>';
+    document.getElementById('projectsBody').innerHTML = tableHTML;
+    document.getElementById('allProjectsBody').innerHTML = tableHTML;
+  }
+
+  const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = e => reject(e);
+  });
+
+  async function uploadPrototype(e) {
+    e.preventDefault();
+    const file = document.getElementById('protoImage').files[0];
+    if (!file) return alert('Please select an image');
+    if (file.size > 8 * 1024 * 1024) return alert('Image must be under 8MB. Please compress it first.');
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Uploading...';
+    try {
+      const base64 = await toBase64(file);
+      const res = await fetch(API + '/api/projects/' + currentProjectId + '/prototypes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileUrl: base64, version: document.getElementById('protoVersion').value, comment: document.getElementById('protoNotes').value, status: 'PENDING' })
+      });
+      if (res.ok) {
+        closeProtoModal();
+        alert('Prototype uploaded successfully!');
+        await init();
+      } else {
+        const err = await res.json();
+        alert('Upload failed: ' + (err.message || 'Server error'));
+      }
+    } catch(err) {
+      alert('Upload error: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Upload Prototype';
+    }
+  }
+
+  async function updateProgress(e) {
+    e.preventDefault();
+    const u = getUser();
+    const newStatus = document.getElementById('progProjStatus').value;
+    const comment = document.getElementById('progDesc').value;
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      const progRes = await fetch(API + '/api/projects/' + currentProjectId + '/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': u.userId },
+        body: JSON.stringify({ comment: comment })
+      });
+      if (!progRes.ok) { const err = await progRes.json(); throw new Error(err.message || 'Failed to save progress'); }
+
+      const statusBody = { status: newStatus };
+      if (newStatus === 'DONE') statusBody.handoverDate = new Date().toISOString().split('T')[0];
+      const statusRes = await fetch(API + '/api/projects/' + currentProjectId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(statusBody)
+      });
+      if (!statusRes.ok) { const err = await statusRes.json(); throw new Error(err.message || 'Failed to update status'); }
+
+      closeProgressModal();
+      alert(newStatus === 'DONE' ? 'Project marked as Done!' : 'Progress saved!');
+      await init();
+    } catch(err) {
+      alert('Error: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Progress';
+    }
+  }
+
+  async function loadProjectDetails(pid) {
+    document.getElementById('vpPrototypes').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('vpTimeline').innerHTML = '';
+    try {
+      const [protoRes, progRes] = await Promise.all([
+        fetch(API + '/api/projects/' + pid + '/prototypes'),
+        fetch(API + '/api/projects/' + pid + '/progress')
+      ]);
+      if (!protoRes.ok || !progRes.ok) throw new Error('Server error');
+      const protos = (await protoRes.json()).data || [];
+      const progs  = (await progRes.json()).data || [];
+
+      let phtml = protos.length === 0 ? '<p class="timeline-date" style="margin-top:10px;">No prototypes uploaded yet.</p>' : '';
+      protos.forEach(p => {
+        phtml += '<div style="background:var(--glass); padding:12px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border);">' +
+          '<div style="font-size:0.8rem; color:var(--muted);">' + new Date(p.uploadDate).toLocaleString() + '</div>' +
+          '<div style="margin:6px 0; font-size:0.9rem;"><strong>Version:</strong> ' + p.version + ' &nbsp;<span class="badge ' + (p.status === 'APPROVED' ? 'green' : 'orange') + '">' + formatStatus(p.status) + '</span></div>' +
+          (p.comment ? '<div style="font-size:0.85rem; color:var(--muted);">Note: ' + p.comment + '</div>' : '') +
+          (p.fileUrl ? '<img src="' + p.fileUrl + '" class="proto-img"/>' : '') +
+        '</div>';
+      });
+      document.getElementById('vpPrototypes').innerHTML = phtml;
+
+      let thtml = progs.length === 0 ? '<p class="timeline-date" style="margin-top:10px;">No updates yet.</p>' : '<div class="timeline">';
+      progs.forEach(pr => {
+        thtml += '<div class="timeline-item"><div class="timeline-date">' + new Date(pr.dateTime).toLocaleString() + '</div>' +
+          '<div class="timeline-content">' + (pr.comment || '') + '</div></div>';
+      });
+      if (progs.length > 0) thtml += '</div>';
+      document.getElementById('vpTimeline').innerHTML = thtml;
+    } catch(err) {
+      document.getElementById('vpPrototypes').innerHTML = '<span style="color:red"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load: ' + err.message + '</span>';
+    }
+  }
+
+  setTimeout(init, 300);
+</script>
+</body>
+</html>

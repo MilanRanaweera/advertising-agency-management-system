@@ -1,21 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Web-Based Advertising Agency Management System</title>
-    <link rel="stylesheet" href="css/main.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdVision – Creative Advertising Agency</title>
+  <link rel="stylesheet" href="/css/home.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body>
-    <h1>Advertising Agency Management System</h1>
-    <p>Group ID: Y2-S1-MLB-B9G2-08</p>
-    <ul>
-        <li><a href="pages/useraccount/index.html">User Account Management</a></li>
-        <li><a href="pages/servicepackage/index.html">Service and Package Management</a></li>
-        <li><a href="pages/quotation/index.html">Quotation Management</a></li>
-        <li><a href="pages/project/index.html">Project Management</a></li>
-        <li><a href="pages/payment/index.html">Payment and Invoice Management</a></li>
-        <li><a href="pages/communication/index.html">Communication Management</a></li>
-    </ul>
-    <script src="js/main.js"></script>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">AV</div>
+    <span>AdVision</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#packages">Packages</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><a href="#testimonials">Feedback</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <button class="nav-signin" onclick="window.location.href='/login.html'">
+    <i class="fa-solid fa-right-to-bracket"></i> Sign In / Sign Up
+  </button>
+  <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+</nav>
+
+<!-- Hero Section -->
+<header id="home" class="hero">
+  <div class="hero-bg"></div>
+  <div class="particles-hero" id="particles"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Elevate Your Brand</div>
+    <h1 class="hero-title">Creative Solutions <span class="line2">For Modern Brands</span></h1>
+    <p class="hero-sub">We are AdVision. We build campaigns, manage projects, and deliver stunning results for our clients around the world.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="window.location.href='/login.html'">Get Started <i class="fa-solid fa-arrow-right"></i></button>
+      <button class="btn-outline" onclick="document.getElementById('packages').scrollIntoView()">View Packages</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>250+</strong><span>Happy Clients</span></div>
+      <div class="hero-stat"><strong>1.2k</strong><span>Projects Done</span></div>
+      <div class="hero-stat"><strong>48</strong><span>Awards Won</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- Packages Section -->
+<section id="packages" class="section section-alt">
+  <div class="section-label">Our Services</div>
+  <div class="section-header-row">
+    <div>
+      <h2 class="section-title">Service Packages</h2>
+      <p class="section-sub">Choose a package that fits your marketing and advertising needs.</p>
+    </div>
+  </div>
+  <div class="packages-grid" id="packagesGrid">
+    <!-- Populated by JS -->
+    <div class="pkg-card">
+      <div class="pkg-icon" style="color:var(--gold);background:rgba(240,165,0,.15);"><i class="fa-solid fa-rocket"></i></div>
+      <h3>Starter Pack</h3>
+      <div class="pkg-price">$499</div>
+      <p>Basic branding and social media setup for startups.</p>
+      <button class="pkg-btn" onclick="window.location.href='/login.html'">Request to Buy</button>
+    </div>
+    <div class="pkg-card">
+      <div class="pkg-icon" style="color:var(--purple);background:rgba(108,92,231,.15);"><i class="fa-solid fa-crown"></i></div>
+      <h3>Professional</h3>
+      <div class="pkg-price">$1,299</div>
+      <p>Full-scale marketing campaign with digital & print media.</p>
+      <button class="pkg-btn" onclick="window.location.href='/login.html'">Request to Buy</button>
+    </div>
+    <div class="pkg-card">
+      <div class="pkg-icon" style="color:var(--green);background:rgba(0,206,201,.15);"><i class="fa-solid fa-gem"></i></div>
+      <h3>Enterprise</h3>
+      <div class="pkg-price">$3,499</div>
+      <p>Dedicated team, TV commercials, and comprehensive analytics.</p>
+      <button class="pkg-btn" onclick="window.location.href='/login.html'">Request to Buy</button>
+    </div>
+  </div>
+</section>
+
+<!-- Portfolio / Posters Section -->
+<section id="portfolio" class="section">
+  <div class="section-label">Our Work</div>
+  <h2 class="section-title">Featured Campaigns</h2>
+  <p class="section-sub">Take a look at some of the colorful posters and creatives designed by our brilliant team.</p>
+  <div class="gallery-strip">
+    <div class="poster poster-1"><div class="poster-overlay"></div><div class="poster-label">Neon Nights Festival</div></div>
+    <div class="poster poster-2"><div class="poster-overlay"></div><div class="poster-label">Summer Splash Promo</div></div>
+    <div class="poster poster-3"><div class="poster-overlay"></div><div class="poster-label">Eco-Tech Launch</div></div>
+    <div class="poster poster-4"><div class="poster-overlay"></div><div class="poster-label">Urban Fashion Week</div></div>
+    <div class="poster poster-5"><div class="poster-overlay"></div><div class="poster-label">Foodie Delights</div></div>
+    <div class="poster poster-6"><div class="poster-overlay"></div><div class="poster-label">Corporate Rebrand</div></div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="section section-alt">
+  <div class="section-label">Feedback</div>
+  <h2 class="section-title">What Customers Say</h2>
+  <p class="section-sub">Don't just take our word for it.</p>
+  <div class="testimonials-grid">
+    <div class="testi-card">
+      <div class="testi-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+      <p class="testi-text">"AdVision transformed our brand identity completely. Their design team is exceptionally talented and professional!"</p>
+      <div class="testi-author">
+        <div class="testi-avatar">S</div>
+        <div class="testi-name"><strong>Sarah Jenkins</strong><span>CEO, TechNova</span></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i></div>
+      <p class="testi-text">"The dashboard makes managing our ongoing campaigns so easy. We always know exactly how our projects are progressing."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">M</div>
+        <div class="testi-name"><strong>Marcus Cole</strong><span>Marketing Director, Zenith</span></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+      <p class="testi-text">"Incredible service! We requested a package, got a quote the next day, and the work delivered was top-notch."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">A</div>
+        <div class="testi-name"><strong>Amanda Ruiz</strong><span>Founder, BloomCafe</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="section">
+  <div class="contact-grid">
+    <div class="contact-info">
+      <div class="section-label">Get in Touch</div>
+      <h2 class="section-title">Let's Discuss Your Next Big Idea</h2>
+      <p>Have a project in mind? Our team is ready to help you create an impactful advertising campaign.</p>
+      <div class="contact-item"><i class="fa-solid fa-location-dot"></i><span>123 Creative Blvd, Colombo, Sri Lanka</span></div>
+      <div class="contact-item"><i class="fa-solid fa-phone"></i><span>+94 11 234 5678</span></div>
+      <div class="contact-item"><i class="fa-solid fa-envelope"></i><span>hello@advision.com</span></div>
+    </div>
+    <form class="contact-form" onsubmit="event.preventDefault(); document.getElementById('msgOk').textContent='Message Sent Successfully!';">
+      <div class="form-row">
+        <div class="form-field">
+          <label>Your Name</label>
+          <input type="text" placeholder="John Doe" required/>
+        </div>
+        <div class="form-field">
+          <label>Email Address</label>
+          <input type="email" placeholder="john@example.com" required/>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Subject</label>
+        <select required>
+          <option value="" disabled selected>Select an inquiry type</option>
+          <option value="1">General Inquiry</option>
+          <option value="2">New Project Request</option>
+          <option value="3">Partnership</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Message</label>
+        <textarea placeholder="Tell us about your project..." required></textarea>
+      </div>
+      <div id="msgOk" class="form-success"></div>
+      <button type="submit" class="form-submit">Send Message</button>
+    </form>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo" style="margin-bottom: 12px;">
+        <div class="nav-logo-icon">AV</div>
+        <span>AdVision</span>
+      </div>
+      <p>We are a full-service creative advertising agency focused on driving results through innovative marketing strategies.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#">Digital Marketing</a></li>
+        <li><a href="#">Print Media</a></li>
+        <li><a href="#">Brand Strategy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 AdVision Agency. All rights reserved.</p>
+    <p>Designed with <i class="fa-solid fa-heart" style="color:var(--purple)"></i> for creative minds.</p>
+  </div>
+</footer>
+
+<script>
+  // Simple particle generator for the hero background
+  (function(){
+    const c=document.getElementById('particles');
+    if(!c)return;
+    const cols=['#6c5ce7','#f0a500','#a29bfe','#ffcc44','#00cec9'];
+    for(let i=0;i<40;i++){
+      const p=document.createElement('div'); p.className='particle';
+      const sz=Math.random()*6+2;
+      p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${6+Math.random()*10}s;animation-delay:${Math.random()*5}s;`;
+      c.appendChild(p);
+    }
+  })();
+</script>
 </body>
 </html>

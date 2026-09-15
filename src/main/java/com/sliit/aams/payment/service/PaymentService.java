@@ -1,23 +1,46 @@
 package com.sliit.aams.payment.service;
 
+import com.sliit.aams.common.exception.ResourceNotFoundException;
+import com.sliit.aams.payment.model.Invoice;
 import com.sliit.aams.payment.model.Payment;
+import com.sliit.aams.payment.model.Receipt;
+import com.sliit.aams.payment.repository.InvoiceRepository;
 import com.sliit.aams.payment.repository.PaymentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sliit.aams.payment.repository.ReceiptRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Owner: Ihjas I.M. (IT25101525)
- * TODO: Implement business logic for the payment module use cases.
- */
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private final InvoiceRepository invoiceRepo;
+    private final PaymentRepository paymentRepo;
+    private final ReceiptRepository receiptRepo;
 
-    public List<Payment> findAll() {
-        return paymentRepository.findAll();
+    public List<Invoice> allInvoices() { return invoiceRepo.findAll(); }
+
+    public Invoice getInvoice(Long id) {
+        return invoiceRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
+    }
+
+    public Invoice createInvoice(Invoice inv) { return invoiceRepo.save(inv); }
+
+    @Transactional
+    public Payment pay(Payment p) {
+        Invoice inv = getInvoice(p.getInvoiceId());
+        Payment saved = paymentRepo.save(p);
+        inv.setPaymentStatus("PAID");
+        invoiceRepo.save(inv);
+        receiptRepo.save(Receipt.builder().paymentId(saved.getPaymentId()).build());
+        return saved;
+    }
+
+    public List<Payment> paymentsForInvoice(Long invoiceId) {
+        return paymentRepo.findByInvoiceId(invoiceId);
     }
 }

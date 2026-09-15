@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAMS - Managing Director Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--deep); padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto;}
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 1.2rem; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; margin-top: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge.green { background: rgba(0,206,201,0.2); color: var(--green); }
+    .badge.orange { background: rgba(240,165,0,0.2); color: var(--gold); }
+    
+    .timeline { margin-top: 20px; padding-left: 20px; border-left: 2px solid var(--border); }
+    .timeline-item { position: relative; margin-bottom: 15px; }
+    .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--purple); }
+    .timeline-date { font-size: 0.75rem; color: var(--muted); }
+    .timeline-content { background: var(--glass); padding: 10px; border-radius: 6px; margin-top: 5px; }
+    
+    .proto-img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">AAMS</div>
+    <div class="brand-text"><strong>AAMS</strong><span>Director Portal</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="userInitial">M</div>
+    <div class="user-meta"><strong id="userName">Director</strong><span id="userRole">Managing Director</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" onclick="showSection('dashboard', this)"><i class="fa-solid fa-gauge"></i>Dashboard</a>
+    
+    <div class="nav-section-label">Projects</div>
+    <a class="nav-item" onclick="showSection('projects', this)"><i class="fa-solid fa-diagram-project"></i>All Projects</a>
+    <a class="nav-item" onclick="showSection('designers', this)"><i class="fa-solid fa-palette"></i>Designers</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Director Dashboard</h1>
+    <div class="topbar-right">
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+    </div>
+  </div>
+  
+  <div class="content">
+    <section id="sec-dashboard">
+      <div class="stats-row">
+        <div class="kpi"><div class="kpi-icon blue"><i class="fa-solid fa-diagram-project"></i></div><div class="kpi-info"><strong id="kpi-projects">-</strong><span>Total Projects</span></div></div>
+        <div class="kpi"><div class="kpi-icon purple"><i class="fa-solid fa-palette"></i></div><div class="kpi-info"><strong id="kpi-designers">-</strong><span>Designers</span></div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <h3>Recent Projects</h3>
+
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Customer</th><th>Designer</th><th>Start Date</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="projectsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sec-projects" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>All Projects</h3>
+          <button class="action-btn gold" onclick="openNewProjectModal()"><i class="fa-solid fa-plus"></i> New Project</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Customer</th><th>Designer</th><th>Start Date</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="allProjectsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sec-designers" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>Designers Availability</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Availability</th>
+            </tr>
+          </thead>
+          <tbody id="designersBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- New Project Modal -->
+<div class="modal" id="newProjectModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Start New Project</span>
+      <button class="modal-close" onclick="closeNewProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="newProjectForm" onsubmit="createProject(event)">
+      <div class="form-group">
+        <label>Customer</label>
+        <select id="projCustomer" required></select>
+      </div>
+      <div class="form-group">
+        <label>Assign Designer</label>
+        <select id="projDesigner" required></select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" id="projStartDate" required/>
+      </div>
+      <div class="form-group">
+        <label>Estimated End Date</label>
+        <input type="date" id="projEndDate" required/>
+      </div>
+      <button type="submit" class="btn-submit">Create Project</button>
+    </form>
+  </div>
+</div>
+
+<!-- View Project Details Modal (Prototypes & Feedback) -->
+<div class="modal" id="viewProjectModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <span id="vpTitle">Project Details</span>
+      <button class="modal-close" onclick="closeViewProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="vpContent">
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Prototypes</h4>
+      <div id="vpPrototypes"></div>
+      
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Progress & All Feedback</h4>
+      <div id="vpTimeline"></div>
+
+      <h4 style="margin-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">Add MD Feedback</h4>
+      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;">This feedback will be visible to both the Designer and Customer.</p>
+      <form onsubmit="submitMDFeedback(event, currentViewProjectId)" style="margin-top: 10px;">
+        <textarea id="mdFeedbackText" class="form-group" style="width: 100%; background:rgba(255,255,255,0.05); color:#fff; padding:10px; border-radius:6px; border:1px solid var(--border);" rows="3" placeholder="Leave feedback for designer/customer..." required></textarea>
+        <button type="submit" class="btn-submit" style="padding: 8px;">Add Feedback</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script src="/js/dash-shared.js"></script>
+<script>
+  const formatStatus = s => s === "IN_PROGRESS" ? "In Progress" : (s === "DONE" ? "Done" : (s === "COMPLETED" ? "Completed" : s));
+
+  let allUsers = [];
+  let allProjects = [];
+  let currentViewProjectId = null;
+  
+  function showSection(name, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    ['dashboard','projects','designers'].forEach(id => {
+      const sec = document.getElementById('sec-' + id);
+      if (sec) sec.classList.toggle('hidden', id !== name);
+    });
+    document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  function openNewProjectModal() { 
+    document.getElementById('newProjectModal').classList.add('active'); 
+    document.getElementById('projStartDate').valueAsDate = new Date();
+  }
+  function closeNewProjectModal() { 
+    document.getElementById('newProjectModal').classList.remove('active'); 
+    document.getElementById('newProjectForm').reset();
+  }
+  
+  function openViewProjectModal(id) {
+    currentViewProjectId = id;
+    document.getElementById('viewProjectModal').classList.add('active');
+    document.getElementById('vpTitle').textContent = 'Project #' + id;
+    loadProjectDetails(id);
+  }
+  function closeViewProjectModal() {
+    document.getElementById('viewProjectModal').classList.remove('active');
+    currentViewProjectId = null;
+  }
+
+  async function init() {
+    try {
+      const ustr = localStorage.getItem('aams_user');
+      if (ustr) {
+        const u = JSON.parse(ustr);
+      }
+      
+      const [staffRes, custRes, projRes] = await Promise.all([
+        fetch(`${API}/api/admin/staff`),
+        fetch(`${API}/api/admin/customers`),
+        fetch(`${API}/api/projects`)
+      ]);
+      const staff = (await staffRes.json()).data || [];
+      const custs = (await custRes.json()).data || [];
+      allUsers = [...staff, ...custs];
+      allProjects = (await projRes.json()).data || [];
+      
+      renderDashboard();
+      populateDropdowns();
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  function renderDashboard() {
+    const designers = allUsers.filter(u => u.role === 'DESIGNER');
+    const customers = allUsers.filter(u => u.role === 'CUSTOMER');
+    
+    document.getElementById('kpi-projects').textContent = allProjects.length;
+    document.getElementById('kpi-designers').textContent = designers.length;
+    
+    
+    const getUserName = (id) => {
+      const u = allUsers.find(x => x.userId === id);
+      return u ? `${u.firstName} ${u.lastName}` : '-';
+    };
+    
+    const rowHTML = p => `
+      <tr>
+        <td>#${p.projectId}</td>
+        <td>${getUserName(p.customerId)}</td>
+        <td>${getUserName(p.designerId)}</td>
+        <td>${p.startDate}</td>
+        <td><span class="badge ${p.status === 'DONE' ? 'green' : 'orange'}">${formatStatus(p.status)}</span></td>
+        <td><button onclick="openViewProjectModal(${p.projectId})" style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px; cursor:pointer;">View</button></td>
+      </tr>
+    `;
+    
+    const tableHTML = allProjects.length ? allProjects.map(rowHTML).join('') : `<tr><td colspan="6">No projects found.</td></tr>`;
+    document.getElementById('projectsBody').innerHTML = tableHTML;
+    document.getElementById('allProjectsBody').innerHTML = tableHTML;
+    
+    // Designers Availability
+    const dBody = document.getElementById('designersBody');
+    dBody.innerHTML = '';
+    designers.forEach(d => {
+      const activeProjCount = allProjects.filter(p => p.designerId === d.userId && p.status !== 'DONE').length;
+      const status = activeProjCount > 0 ? `<span class="badge orange">Busy (${activeProjCount})</span>` : `<span class="badge green">Available</span>`;
+      dBody.innerHTML += `<tr><td>${d.firstName} ${d.lastName}</td><td>${d.email}</td><td>${status}</td></tr>`;
+    });
+  }
+  
+  function populateDropdowns() {
+    const cSel = document.getElementById('projCustomer');
+    const dSel = document.getElementById('projDesigner');
+    
+    cSel.innerHTML = '<option value="">Select Customer</option>';
+    dSel.innerHTML = '<option value="">Select Designer</option>';
+    
+    allUsers.filter(u => u.role === 'CUSTOMER').forEach(c => {
+      cSel.innerHTML += `<option value="${c.userId}">${c.firstName} ${c.lastName}</option>`;
+    });
+    
+    allUsers.filter(u => u.role === 'DESIGNER').forEach(d => {
+      const activeProjCount = allProjects.filter(p => p.designerId === d.userId && p.status !== 'DONE').length;
+      dSel.innerHTML += `<option value="${d.userId}">${d.firstName} ${d.lastName} (${activeProjCount} active)</option>`;
+    });
+  }
+
+  async function createProject(e) {
+    e.preventDefault();
+    const cId = document.getElementById('projCustomer').value;
+    const dId = document.getElementById('projDesigner').value;
+    
+    const u = JSON.parse(localStorage.getItem('aams_user'));
+    
+    const payload = {
+      customerId: parseInt(cId),
+      designerId: parseInt(dId),
+      createdByManagerId: u.userId,
+      startDate: document.getElementById('projStartDate').value,
+      endDate: document.getElementById('projEndDate').value,
+      status: 'IN_PROGRESS'
+    };
+    
+    try {
+      const res = await fetch(`${API}/api/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok) {
+        closeNewProjectModal();
+        init(); // reload everything
+      }
+    } catch(err) {
+      alert('Error creating project');
+    }
+  }
+
+  async function loadProjectDetails(pid) {
+    document.getElementById('vpPrototypes').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('vpTimeline').innerHTML = '';
+    try {
+      const [protoRes, progRes] = await Promise.all([
+        fetch(`${API}/api/projects/${pid}/prototypes`),
+        fetch(`${API}/api/projects/${pid}/progress`)
+      ]);
+      if (!protoRes.ok || !progRes.ok) throw new Error('Server error loading project details');
+      const protos = (await protoRes.json()).data || [];
+      const progs = (await progRes.json()).data || [];
+      
+      let phtml = protos.length === 0 ? '<p class="timeline-date" style="margin-top:10px;">No prototypes uploaded yet.</p>' : '';
+      protos.forEach(p => {
+        phtml += `
+          <div style="background:var(--glass); padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+            <div style="font-size:0.8rem; color:var(--muted);">${new Date(p.uploadDate).toLocaleString()}</div>
+            <div style="margin:6px 0;"><strong>Version:</strong> ${p.version} &nbsp;
+              <span class="badge ${p.status === 'APPROVED' ? 'green' : 'orange'}">${formatStatus(p.status)}</span>
+            </div>
+            ${p.comment ? `<div style="font-size:0.85rem; color:var(--muted);">Note: ${p.comment}</div>` : ''}
+            ${p.fileUrl ? `<img src="${p.fileUrl}" class="proto-img"/>` : '<div style="padding:10px; background:rgba(0,0,0,0.2); border-radius:6px; margin-top:6px; font-size:0.85rem; color:var(--muted);">No image attached</div>'}
+          </div>`;
+      });
+      document.getElementById('vpPrototypes').innerHTML = phtml;
+      
+      let thtml = progs.length === 0 ? '<p class="timeline-date" style="margin-top:10px;">No updates yet.</p>' : '<div class="timeline">';
+      progs.forEach(pr => {
+        const isFeedback = (pr.comment || '').startsWith('[Customer Feedback]');
+        const isMD = (pr.comment || '').startsWith('[MD Feedback]');
+        const label = isFeedback ? '👤 Customer' : isMD ? '📋 Director' : '🎨 Designer';
+        thtml += `
+          <div class="timeline-item">
+            <div class="timeline-date">${new Date(pr.dateTime).toLocaleString()} &nbsp;<strong>${label}</strong></div>
+            <div class="timeline-content">${pr.comment || ''}</div>
+          </div>`;
+      });
+      if (progs.length > 0) thtml += '</div>';
+      document.getElementById('vpTimeline').innerHTML = thtml;
+      
+    } catch(err) {
+      document.getElementById('vpPrototypes').innerHTML = `<span style="color:red"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load details: ${err.message}</span>`;
+    }
+  }
+  
+  async function submitMDFeedback(e, pid) {
+    e.preventDefault();
+    const text = document.getElementById('mdFeedbackText').value.trim();
+    if (!text) return;
+    const u = JSON.parse(localStorage.getItem('aams_user'));
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try {
+      const res = await fetch(`${API}/api/projects/${pid}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': u.userId },
+        body: JSON.stringify({ comment: `[MD Feedback] ${text}` })
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'Failed'); }
+      document.getElementById('mdFeedbackText').value = '';
+      alert('Feedback sent! It is now visible to both the Designer and Customer.');
+      loadProjectDetails(pid);
+    } catch(err) {
+      alert('Error adding feedback: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Feedback';
+    }
+  }
+  
+  setTimeout(init, 500);
+</script>
+</body>
+</html>

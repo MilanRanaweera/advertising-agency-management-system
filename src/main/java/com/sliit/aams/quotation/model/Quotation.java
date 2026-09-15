@@ -1,26 +1,25 @@
 package com.sliit.aams.quotation.model;
 
+
 import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Owner: Silva T.T.M. (IT25103316)
- * TODO: Add fields based on the quotation use case table in the lab sheet.
- */
 @Entity
-@Table(name = "quotation_quotation")
+@Table(name = "quotation")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Quotation {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "q_id") private Long qId;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "q_date", nullable = false)              private LocalDateTime qDate = LocalDateTime.now();
+    @Column(nullable = false, length = 30)                  private String status = "PENDING";
+    @Column(name = "customer_id", nullable = false)         private Long customerId;
+    @Column(name = "prepared_by_rep_id")                    private Long preparedByRepId;
 
-    // TODO: add attributes
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @OneToMany(mappedBy = "quotation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private List<QuotationItem> items = new ArrayList<>();
 }

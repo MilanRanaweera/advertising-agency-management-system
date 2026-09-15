@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAMS - Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--deep); padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid var(--border); }
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 1.2rem; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text); }
+    .form-group input, .form-group select { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; margin-top: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge.active { background: rgba(0,206,201,0.2); color: var(--green); }
+    .badge.inactive { background: rgba(255,0,0,0.2); color: #ff6b6b; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">AAMS</div>
+    <div class="brand-text"><strong>AAMS</strong><span>Admin Panel</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="userInitial">A</div>
+    <div class="user-meta"><strong id="userName">Admin</strong><span id="userRole">Administrator</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" onclick="showSection('dashboard', this)"><i class="fa-solid fa-gauge"></i>Dashboard</a>
+    
+    <div class="nav-section-label">Management</div>
+    <a class="nav-item" onclick="showSection('users', this)"><i class="fa-solid fa-users"></i>Users</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Admin Dashboard</h1>
+    <div class="topbar-right">
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+    </div>
+  </div>
+  
+  <div class="content">
+    <!-- Dashboard Section -->
+    <section id="sec-dashboard">
+      <div class="stats-row">
+        <div class="kpi"><div class="kpi-icon purple"><i class="fa-solid fa-users"></i></div><div class="kpi-info"><strong id="kpiUsers">-</strong><span>Total Users</span></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="section-card">
+          <div class="section-header"><h3>Welcome to AAMS Admin</h3></div>
+          <div style="padding: 10px; color: var(--text);">Use the left sidebar to manage the system.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Section -->
+    <section id="sec-users" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>User Management</h3>
+          <button class="action-btn gold" onclick="openAddUserModal()"><i class="fa-solid fa-plus"></i> Add User</button>
+        </div>
+        <table class="data-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Add User Modal -->
+<div class="modal" id="addUserModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Add New User</span>
+      <button class="modal-close" onclick="closeAddUserModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="addUserForm" onsubmit="addUser(event)">
+      <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>First Name</label>
+          <input type="text" id="addFirstName" required/>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Last Name</label>
+          <input type="text" id="addLastName" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="addEmail" required/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="addPassword" required/>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="addRole" onchange="toggleCustomerFields()" required>
+          <option value="MANAGER">Managing Director</option>
+          <option value="DESIGNER">Designer</option>
+          <option value="MKT_MANAGER">Marketing Manager</option>
+          <option value="SALES_REP">Sales Representative</option>
+          <option value="OFFICER">Customer Relation Officer</option>
+          <option value="CUSTOMER">Customer (Normal User)</option>
+        </select>
+      </div>
+      
+      <!-- Extra fields for customer -->
+      <div id="customerFields" style="display:none; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; margin-bottom:15px;">
+        <div class="form-group"><label>City</label><input type="text" id="addCity"/></div>
+        <div class="form-group"><label>Postal Code</label><input type="text" id="addPostalCode"/></div>
+      </div>
+      
+      <button type="submit" class="btn-submit">Save User</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/dash-shared.js"></script>
+<script>
+  const formatStatus = s => s === "IN_PROGRESS" ? "In Progress" : (s === "DONE" ? "Done" : (s === "COMPLETED" ? "Completed" : s));
+  const API_URL = '';
+  
+  function showSection(name, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('sec-' + name).classList.remove('hidden');
+    document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    
+    if (name === 'users') loadUsers();
+  }
+
+  function openAddUserModal() { document.getElementById('addUserModal').classList.add('active'); }
+  function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('active'); document.getElementById('addUserForm').reset(); toggleCustomerFields(); }
+  function toggleCustomerFields() {
+    const role = document.getElementById('addRole').value;
+    document.getElementById('customerFields').style.display = role === 'CUSTOMER' ? 'block' : 'none';
+  }
+
+  async function loadUsers() {
+    try {
+      // Load both staff and customers
+      const [staffRes, custRes] = await Promise.all([
+        fetch(`${API_URL}/api/admin/staff`),
+        fetch(`${API_URL}/api/admin/customers`)
+      ]);
+      const staffJson = await staffRes.json();
+      const custJson = await custRes.json();
+      
+      const allUsers = [...(staffJson.data||[]), ...(custJson.data||[])];
+      document.getElementById('kpiUsers').textContent = allUsers.length;
+      
+      const tbody = document.querySelector('#usersTable tbody');
+      tbody.innerHTML = '';
+      
+      allUsers.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.firstName} ${u.lastName}</td>
+          <td>${u.email}</td>
+          <td>${u.role}</td>
+          <td><span class="badge ${u.status === 'ACTIVE' ? 'active' : 'inactive'}">${u.status}</span></td>
+          <td>
+            <button onclick="toggleStatus(${u.userId}, '${u.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}')" 
+                    style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px; cursor:pointer;">
+              ${u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  async function toggleStatus(id, newStatus) {
+    try {
+      await fetch(`${API_URL}/api/admin/users/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      loadUsers();
+    } catch(err) {
+      alert('Error updating status');
+    }
+  }
+
+  async function addUser(e) {
+    e.preventDefault();
+    const payload = {
+      firstName: document.getElementById('addFirstName').value,
+      lastName: document.getElementById('addLastName').value,
+      email: document.getElementById('addEmail').value,
+      password: document.getElementById('addPassword').value,
+      role: document.getElementById('addRole').value,
+      city: document.getElementById('addCity').value,
+      postalCode: document.getElementById('addPostalCode').value
+    };
+    
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Error adding user');
+      closeAddUserModal();
+      loadUsers();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+  
+  // init
+  setTimeout(() => loadUsers(), 500);
+</script>
+</body>
+</html>

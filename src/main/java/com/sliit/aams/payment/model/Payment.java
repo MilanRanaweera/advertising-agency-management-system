@@ -1,26 +1,21 @@
 package com.sliit.aams.payment.model;
 
+
 import jakarta.persistence.*;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-/**
- * Owner: Ihjas I.M. (IT25101525)
- * TODO: Add fields based on the payment use case table in the lab sheet.
- */
 @Entity
-@Table(name = "payment_payment")
+@Table(name = "payment")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Payment {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "payment_id") private Long paymentId;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    // TODO: add attributes
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "invoice_id", nullable = false)              private Long invoiceId;
+    @Column(name = "payment_date", nullable = false)            private LocalDateTime paymentDate = LocalDateTime.now();
+    @Column(name = "payment_method", nullable = false, length = 30) private String paymentMethod;
+    @Column(name = "amount_paid", nullable = false)             private BigDecimal amountPaid;
+    @Column(name = "transaction_ref", length = 150)             private String transactionRef;
 }

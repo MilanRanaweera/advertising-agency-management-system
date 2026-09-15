@@ -1,26 +1,22 @@
 package com.sliit.aams.project.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDate;
 
-/**
- * Owner: Ranaweera D.A.I.M. (IT25100994)
- * TODO: Add fields based on the project use case table in the lab sheet.
- */
 @Entity
-@Table(name = "project_project")
+@Table(name = "project")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Project {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "project_id") private Long projectId;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "start_date") private LocalDate startDate;
+    @Column(name = "end_date")   private LocalDate endDate;
 
-    // TODO: add attributes
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "created_by_manager_id") private Long createdByManagerId;
+    @Column(name = "designer_id")           private Long designerId;
+    @Column(name = "customer_id")           private Long customerId;
+    @Column(name = "handover_date")         private LocalDate handoverDate;
+    @Column(length = 30)                    private String status = "IN_PROGRESS";
 }

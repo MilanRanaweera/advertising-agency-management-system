@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAMS - CRO Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--deep); padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto;}
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 1.2rem; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; margin-top: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge.green { background: rgba(0,206,201,0.2); color: var(--green); }
+    .badge.orange { background: rgba(240,165,0,0.2); color: var(--gold); }
+    .badge.purple { background: rgba(108,92,231,0.2); color: var(--purple); }
+    
+    .timeline { margin-top: 20px; padding-left: 20px; border-left: 2px solid var(--border); }
+    .timeline-item { position: relative; margin-bottom: 15px; }
+    .timeline-item::before { content: ''; position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--purple); }
+    .timeline-date { font-size: 0.75rem; color: var(--muted); }
+    .timeline-content { background: var(--glass); padding: 10px; border-radius: 6px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">AAMS</div>
+    <div class="brand-text"><strong>AAMS</strong><span>CRO Portal</span></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="userInitial">O</div>
+    <div class="user-meta"><strong id="userName">Officer</strong><span id="userRole">Customer Relation</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" onclick="showSection('dashboard', this)"><i class="fa-solid fa-gauge"></i>Dashboard</a>
+    <div class="nav-section-label">Communication</div>
+    <a class="nav-item" onclick="showSection('inquiries', this)"><i class="fa-solid fa-circle-question"></i>Inquiries</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">CRO Dashboard</h1>
+    <div class="topbar-right">
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+    </div>
+  </div>
+  
+  <div class="content">
+    <section id="sec-dashboard">
+      <div class="stats-row">
+        <div class="kpi">
+          <div class="kpi-icon orange"><i class="fa-solid fa-circle-question"></i></div>
+          <div class="kpi-info"><strong id="kpi-open">-</strong><span>Open Inquiries</span></div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <h3>Open Inquiries</h3>
+          <button class="action-btn" onclick="showSection('inquiries', document.querySelectorAll('.nav-item')[1])">View All</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Subject</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="inqBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sec-inquiries" class="hidden">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>All Inquiries</h3>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Subject</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="allInqBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+
+<!-- View Inquiry Modal -->
+<div class="modal" id="inqModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <span id="inqTitle">Inquiry Details</span>
+      <button class="modal-close" onclick="closeInqModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="inqSubject" style="font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;"></div>
+    <div id="inqStatusBadge" style="margin-bottom: 20px;"></div>
+    
+    <div id="inqResponses"></div>
+    
+    <form onsubmit="submitResponse(event)" style="margin-top: 20px;">
+      <textarea id="respText" class="form-group" style="width: 100%; background:rgba(255,255,255,0.05); color:#fff; padding:10px; border-radius:6px; border:1px solid var(--border);" rows="3" placeholder="Write your response..." required></textarea>
+      
+      <div class="form-group" style="margin-top: 10px;">
+        <label>Update Status</label>
+        <select id="inqStatusSelect">
+          <option value="OPEN">Open</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="CLOSED">Closed</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn-submit" style="padding: 8px;">Submit Response</button>
+    </form>
+  </div>
+</div>
+
+
+<script src="/js/dash-shared.js"></script>
+<script>
+
+  let allInquiries = [];
+  let currentInqId = null;
+
+  function showSection(name, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('sec-' + name).classList.remove('hidden');
+    document.getElementById('pageTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    if(name === 'inquiries') loadInquiries();
+  }
+
+  async function init() {
+    try {
+      const ustr = localStorage.getItem('aams_user');
+      const u = JSON.parse(ustr);
+      if (u) {
+      }
+      loadInquiries();
+    } catch(err) {}
+  }
+  
+  async function loadInquiries() {
+    try {
+      const res = await fetch(`${API}/api/communication/inquiries`);
+      allInquiries = (await res.json()).data || [];
+      
+      const openInqs = allInquiries.filter(i => i.status !== 'CLOSED');
+      document.getElementById('kpi-open').textContent = openInqs.length;
+      
+      const rowHTML = i => `
+        <tr>
+          <td>#${i.inquiryId}</td>
+          <td>${i.subject}</td>
+          <td>${new Date(i.createdAt).toLocaleDateString()}</td>
+          <td><span class="badge ${i.status==='OPEN'?'orange':i.status==='CLOSED'?'green':'purple'}">${i.status}</span></td>
+          <td><button onclick="openInqModal(${i.inquiryId})" style="padding:4px 8px; border:1px solid var(--border); background:var(--glass); color:#fff; border-radius:4px; cursor:pointer;">View</button></td>
+        </tr>
+      `;
+      
+      document.getElementById('inqBody').innerHTML = openInqs.length ? openInqs.map(rowHTML).join('') : '<tr><td colspan="5">No open inquiries</td></tr>';
+      document.getElementById('allInqBody').innerHTML = allInquiries.length ? allInquiries.map(rowHTML).join('') : '<tr><td colspan="5">No inquiries found</td></tr>';
+    } catch(e) {}
+  }
+
+  function openInqModal(id) {
+    currentInqId = id;
+    document.getElementById('inqModal').classList.add('active');
+    const inq = allInquiries.find(i => i.inquiryId === id);
+    if(inq) {
+      document.getElementById('inqTitle').textContent = 'Inquiry #' + id;
+      document.getElementById('inqSubject').textContent = inq.subject;
+      document.getElementById('inqStatusBadge').innerHTML = `<span class="badge ${inq.status==='OPEN'?'orange':inq.status==='CLOSED'?'green':'purple'}">${inq.status}</span>`;
+      document.getElementById('inqStatusSelect').value = inq.status;
+      loadResponses(id);
+    }
+  }
+  
+  function closeInqModal() {
+    document.getElementById('inqModal').classList.remove('active');
+    currentInqId = null;
+  }
+  
+  async function loadResponses(id) {
+    document.getElementById('inqResponses').innerHTML = 'Loading...';
+    try {
+      const res = await fetch(`${API}/api/communication/inquiries/${id}/responses`);
+      const responses = (await res.json()).data || [];
+      
+      if(responses.length === 0) {
+        document.getElementById('inqResponses').innerHTML = '<p class="timeline-date">No responses yet.</p>';
+        return;
+      }
+      
+      let html = '<div class="timeline">';
+      responses.forEach(r => {
+        html += `
+          <div class="timeline-item">
+            <div class="timeline-date">${new Date(r.responseDate).toLocaleString()} ${r.officerId ? '(Officer)' : '(Customer)'}</div>
+            <div class="timeline-content">${r.responseText}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      document.getElementById('inqResponses').innerHTML = html;
+      
+    } catch(err) {
+      document.getElementById('inqResponses').innerHTML = 'Error loading responses.';
+    }
+  }
+  
+  async function submitResponse(e) {
+    e.preventDefault();
+    const text = document.getElementById('respText').value;
+    const newStatus = document.getElementById('inqStatusSelect').value;
+    const u = JSON.parse(localStorage.getItem('aams_user'));
+    
+    try {
+      // Add response
+      if(text.trim() !== '') {
+        await fetch(`${API}/api/communication/inquiries/${currentInqId}/responses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-User-Id': u.userId },
+          body: JSON.stringify({ responseText: text })
+        });
+      }
+      
+      // Update status
+      await fetch(`${API}/api/communication/inquiries/${currentInqId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      document.getElementById('respText').value = '';
+      loadInquiries();
+      openInqModal(currentInqId);
+    } catch(err) {
+      alert("Error adding response");
+    }
+  }
+  
+  setTimeout(init, 500);
+</script>
+</body>
+</html>
