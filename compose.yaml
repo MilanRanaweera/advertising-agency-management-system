@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: axiom-db
+      POSTGRES_USER: axiom
+      POSTGRES_PASSWORD: axiom@2026
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U axiom -d axiom-db"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/axiom-db
+      DB_USER: axiom
+      DB_PASSWORD: axiom@2026
+      AXIOM_DEMO: "true"
+      UPLOAD_DIR: /app/uploads
+      MAIL_ENABLED: "true"
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    ports: ["127.0.0.1:8080:8080"]
+    volumes: ["uploaded-files:/app/uploads"]
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports: ["127.0.0.1:4200:80"]
+    depends_on: [backend]
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ["127.0.0.1:8025:8025", "127.0.0.1:1025:1025"]
+volumes:
+  postgres-data:
+  uploaded-files:

@@ -1,0 +1,159 @@
+<div *ngIf="!api.user;else workspace" class="landing">
+  <header>
+    <a class="brand" href="/">✳ axiom.</a>
+    <nav>
+      <a href="#services">Services & packages</a
+      ><button class="quiet" (click)="openAuth()">Sign in</button
+      ><button (click)="openAuth(true)">Start a project ↗</button>
+    </nav>
+  </header>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Sri Lankan roots. Global ideas.</span>
+      <h1>Don’t blend in.<br />Make your <em>mark.</em></h1>
+      <p>
+        Build your brand with a creative team. Follow every step, from the first
+        idea to the final design.
+      </p>
+      <button (click)="openAuth(true)">Build your project ↗</button>
+    </div>
+    <div id="hero-3d" class="hero3d">
+      <canvas
+        id="hero-3d-canvas"
+        tabindex="0"
+        aria-label="Earth highlighting Sri Lanka. Drag to rotate; space to pause."
+      ></canvas
+      ><img
+        class="hero3d-fallback"
+        src="/assets/earth-map.png"
+        alt="Earth map"
+      />
+    </div>
+  </section>
+  <section id="services">
+    <span class="eyebrow">Made for your ambition</span>
+    <h2 class="section-title">Your idea. Your starting point.</h2>
+    <p class="error" *ngIf="error">{{error}}</p>
+    <div class="record-grid">
+      <article class="record" *ngFor="let item of offerings">
+        <img
+          class="service-image"
+          [src]="artwork(item)"
+          alt=""
+          loading="lazy"
+        /><span class="eyebrow">{{item.kind}}</span>
+        <h2>{{item.name}}</h2>
+        <p>{{item.description}}</p>
+        <p class="amount">LKR {{item.price|number:'1.2-2'}}</p>
+        <p>{{item.deliverables}}</p>
+        <button (click)="openAuth(true)">Start with this ↗</button>
+      </article>
+    </div>
+  </section>
+  <footer id="contact" class="creative-footer" aria-labelledby="footer-title">
+    <div class="footer-invitation">
+      <div>
+        <span class="eyebrow">Great things start with a conversation</span>
+        <h2 id="footer-title">A little spark.<br />A <em>big impression.</em></h2>
+      </div>
+      <button class="footer-project" (click)="openAuth(true)">Let’s make it happen <span aria-hidden="true">↗</span></button>
+    </div>
+    <div class="footer-grid">
+      <div class="footer-story">
+        <a class="brand footer-brand" href="/" aria-label="Axiom home"><span class="footer-symbol" aria-hidden="true">✳</span> axiom.</a>
+        <p>Ideas with personality.<br />Brands that leave a mark.</p>
+        <span class="footer-origin"><span aria-hidden="true"></span> Born in Sri Lanka. Built for possibility.</span>
+      </div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <h3>Explore</h3>
+        <a href="#services">Services & packages <span aria-hidden="true">↗</span></a>
+        <button (click)="openAuth(true)">Start a project <span aria-hidden="true">↗</span></button>
+        <button (click)="openAuth()">Client sign in <span aria-hidden="true">↗</span></button>
+      </nav>
+      <div class="footer-details">
+        <h3>Say hello</h3>
+        <address>
+          <a href="mailto:axiom@gmail.com">axiom&#64;gmail.com</a>
+          <a href="tel:+94115369999">+94 115369999</a>
+          <a href="https://www.axiom.lk">www.axiom.lk</a>
+          <p>11/B, Galle Road,<br />Colombo, Sri Lanka</p>
+        </address>
+      </div>
+      <div class="footer-location">
+        <div class="footer-map-heading"><h3>Our corner of the world</h3><span>COLOMBO, LK</span></div>
+        <iframe title="Map showing the Axiom address on Galle Road, Colombo" src="https://www.google.com/maps?q=11%2FB%2C%20Galle%20Road%2C%20Colombo%2C%20Sri%20Lanka&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="footer-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=11%2FB%2C%20Galle%20Road%2C%20Colombo%2C%20Sri%20Lanka" target="_blank" rel="noopener noreferrer">Find us on Google Maps <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom"><span>© {{currentYear}} AXIOM Pvt Ltd</span><span>A little island. A world of ideas.</span><a href="#">Back to top ↑</a></div>
+  </footer>
+</div>
+<ng-template #workspace
+  ><div class="workspace">
+    <aside>
+      <a class="brand">✳ axiom.</a>
+      <div class="identity">
+        <strong>{{api.user?.name}}</strong
+        ><span>{{roleLabel(api.user?.role)}}</span>
+      </div>
+      <nav>
+        <a
+          *ngFor="let section of navigation"
+          [routerLink]="'/'+section.path"
+          routerLinkActive="active"
+          >{{section.name}}</a
+        >
+      </nav>
+      <p *ngIf="api.cart.length">{{api.cart.length}} offerings in brief</p>
+      <button class="quiet" (click)="logout()">Sign out</button
+      >
+    </aside>
+    <main><router-outlet></router-outlet></main></div
+></ng-template>
+<div class="modal-shade" *ngIf="authOpen">
+  <section
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Account access"
+  >
+    <button class="close quiet" (click)="authOpen=false" aria-label="Close">
+      ×
+    </button>
+    <h2>{{register?'Start your next chapter':'Welcome back'}}</h2>
+    <form #authForm="ngForm" (ngSubmit)="authForm.valid && authenticate()">
+      <label *ngIf="register"
+        >Name<input [(ngModel)]="name" name="name" required /></label
+      ><label
+        >{{register ? 'Email' : 'Username or email'}}<input
+          [type]="register ? 'email' : 'text'"
+          [(ngModel)]="email"
+          name="email"
+          required
+          autocomplete="username" /></label
+      ><label
+        >Password<input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          [minlength]="register ? 10 : 1"
+          [autocomplete]="register?'new-password':'current-password'"
+      /></label>
+      <ng-container *ngIf="register">
+        <label>Address<textarea [(ngModel)]="address" name="address" maxlength="255" required autocomplete="street-address"></textarea></label>
+        <label>Contact number<input type="tel" [(ngModel)]="contactNo" name="contactNo" required maxlength="30" autocomplete="tel" /></label>
+        <label>Sex<select [(ngModel)]="sex" name="sex" required><option value="M">Male</option><option value="F">Female</option></select></label>
+        <label>Date of birth<input type="date" [(ngModel)]="birthDate" name="birthDate" [max]="today" required autocomplete="bday" /></label>
+      </ng-container>
+      <p class="error" *ngIf="error">{{error}}</p>
+      <button type="submit" [disabled]="busy || authForm.invalid">
+        {{busy?'Please wait…':register?'Create account':'Sign in'}}
+      </button>
+    </form>
+    <button type="button" class="quiet auth-switch" [disabled]="busy" (click)="register=!register">
+      {{register?'Already have an account? Sign in':'Create a customer
+      account'}}
+    </button>
+  </section>
+</div>

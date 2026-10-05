@@ -1,0 +1,16 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml ./
+COPY application/backend application/backend
+COPY user-management/backend user-management/backend
+COPY service-package-management/backend service-package-management/backend
+COPY quotation-management/backend quotation-management/backend
+COPY project-management/backend project-management/backend
+COPY payment-invoice-management/backend payment-invoice-management/backend
+COPY communication-management/backend communication-management/backend
+RUN mvn -B package -DskipTests
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/target/axiom-1.0.0.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","app.jar"]

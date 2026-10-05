@@ -1,0 +1,307 @@
+<section class="page-intro">
+  <div>
+    <span class="eyebrow">{{ roleLabel(role) }}</span>
+    <h1>{{ config.title }}</h1>
+    <p>{{ config.subtitle }}</p>
+  </div>
+  <button *ngIf="can(config.createRoles)" (click)="create()">
+    Create new +
+  </button>
+</section>
+<div class="banner">
+  <div>
+    <span>Your workspace</span>
+    <h2>{{ api.user?.name }}</h2>
+    <p>{{ rows.length }} records · {{ pending }} awaiting action</p>
+  </div>
+  <img [src]="'/assets/' + config.art" alt="" width="170" height="170" />
+</div>
+<p class="error" role="alert" *ngIf="error">{{ error }}</p>
+<p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
+<div class="toolbar">
+  <input
+    aria-label="Search records"
+    placeholder="Search this section…"
+    [(ngModel)]="search"
+  /><button class="quiet" (click)="load()">Refresh</button
+  ><button
+    class="quiet"
+    *ngIf="
+      [
+        'FINANCE_MANAGER',
+        'FINANCE_MANAGER',
+        'CUSTOMER',
+        'COMMUNICATION_STAFF',
+        'CUSTOMER_RELATIONS_OFFICER',
+      ].includes(role)
+    "
+    (click)="viewOutbox()"
+  >
+    Email outbox
+  </button>
+</div>
+<p *ngIf="loading">Loading records…</p>
+<p class="empty" *ngIf="!loading && !shown.length">
+  No records yet. Start with a new record or check your filters.
+</p>
+<div class="record-grid">
+  <article class="record" *ngFor="let row of shown; trackBy: trackRow">
+    <div class="record-top">
+      <span>#{{ row.id }}</span
+      ><span class="badge">{{ row.status === 'SOLVED' || row.status === 'CLOSED' ? 'Solved' : row.status }}</span>
+    </div>
+    <h2>
+      {{
+        row.name ||
+          row.title ||
+          row.subject ||
+          "Invoice for project #" + row.projectId
+      }}
+    </h2>
+    <p>
+      {{
+        row.description ||
+          row.requirements ||
+          row.message ||
+          row.email ||
+          row.billingName
+      }}
+    </p>
+    <p *ngIf="row.price || row.total || row.amount" class="amount">
+      LKR {{ row.price || row.total || row.amount | number: "1.2-2" }}
+    </p>
+    <p *ngIf="config.endpoint === 'users'" class="badge">{{ row.active ? "Active" : "Inactive" }}</p>
+    <pre class="quote-lines" *ngIf="config.endpoint === 'quotes'">{{ row.lines }}</pre>
+    <p *ngIf="config.endpoint === 'quotes' && row.additionalAmount">Additional: LKR {{row.additionalAmount | number:"1.2-2"}} · {{row.additionalDescription}}</p>
+    <p *ngIf="row.feedback" class="feedback">Feedback: {{ row.feedback }}</p>
+    <p *ngIf="row.reply">Reply: {{ row.reply }}</p>
+    <div *ngIf="row.replies?.length" aria-label="Conversation replies">
+      <article *ngFor="let reply of row.replies" class="feedback">
+        <strong>{{reply.authorName}} · {{roleLabel(reply.authorRole)}}</strong>
+        <small> · {{reply.sentAt | date:'medium'}}</small>
+        <p style="white-space: pre-wrap">{{reply.body}}</p>
+      </article>
+    </div>
+    <p *ngIf="row.status === 'SOLVED' || row.status === 'CLOSED'" class="notice">This conversation is solved. Replies are closed.</p>
+    <p *ngIf="row.appointmentAt">
+      Appointment: {{ row.appointmentAt }} · Sri Lanka time
+    </p>
+    <div *ngIf="config.endpoint === 'projects'">
+      <progress [value]="row.progress" max="100"></progress
+      ><span>{{ row.progress }}% complete</span>
+    </div>
+    <div class="actions">
+      <button *ngIf="config.endpoint === 'quotes' && role === 'PROJECT_MANAGER' && row.status === 'ACCEPTED' && !startedQuoteIds.includes(row.id)" (click)="startProject(row)">Start project & assign designers</button>
+      <span class="badge" *ngIf="config.endpoint === 'quotes' && row.status === 'ACCEPTED'">Accepted by customer</span>
+      <button class="quiet" *ngIf="editable(row)" (click)="edit(row)">
+        Edit</button
+      ><button
+        class="danger"
+        *ngIf="removable(row)"
+        (click)="confirmDelete(row)"
+      >
+        Delete</button
+      ><button
+        *ngFor="let action of actions(row)"
+        (click)="actionLabel(row, action)"
+      >
+        {{ action.label }}</button
+      ><button
+        *ngIf="config.endpoint === 'catalog' && role === 'CUSTOMER'"
+        (click)="add(row)"
+      >
+        Add to brief +</button
+      ><button *ngIf="config.endpoint === 'projects'" (click)="details(row)">
+        Open project</button
+      ><button
+        class="quiet"
+        *ngIf="
+          (config.endpoint === 'quotes' && canDownloadQuote(row)) ||
+          (config.endpoint === 'invoices' &&
+            (role !== 'CUSTOMER' || row.status === 'SENT'))
+        "
+        (click)="document(row)"
+      >
+        Download {{ config.endpoint === "quotes" ? "quotation" : "invoice" }}
+      </button>
+    </div>
+  </article>
+</div>
+<div class="modal-shade" *ngIf="modal" (click)="modal = ''">
+  <section
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Workspace action"
+    (click)="$event.stopPropagation()"
+  >
+    <button class="close quiet" aria-label="Close" (click)="modal = ''">
+      ×
+    </button>
+    <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+    <form *ngIf="modal === 'edit'" (ngSubmit)="save()">
+      <h2>{{ config.endpoint === "quotes" ? (editing ? "Prepare quotation" : "Request a quotation") : (editing ? "Edit record" : "Create record") }}</h2>
+      <div *ngIf="config.endpoint === 'quotes' && !editing" class="notice">
+        <div class="cart-line" *ngFor="let item of api.cart">
+          <span>{{ item.name }}</span>
+          <div class="actions">
+            <button type="button" class="quiet" (click)="changeQuantity(item, -1)" aria-label="Decrease quantity">−</button>
+            <strong>{{ item.quantity }}</strong>
+            <button type="button" class="quiet" (click)="changeQuantity(item, 1)" aria-label="Increase quantity">+</button>
+            <button type="button" class="danger" (click)="removeCartItem(item)">Remove</button>
+          </div>
+        </div>
+        <p *ngIf="!api.cart.length">
+          Your brief is empty. Add offerings in Services first.
+        </p>
+      </div>
+      <label *ngFor="let field of fields"
+        >{{ field.label
+        }}<select
+          *ngIf="field.options"
+          [(ngModel)]="form[field.key]"
+          [name]="field.key"
+          [required]="field.required !== false"
+        >
+          <option *ngFor="let option of field.options" [value]="option">
+            {{ field.key === "role" ? roleLabel(option) : option }}
+          </option></select
+        ><textarea
+          *ngIf="field.type === 'textarea'"
+          [(ngModel)]="form[field.key]"
+          [name]="field.key"
+          [required]="field.required !== false"
+        ></textarea
+        ><input
+          *ngIf="
+            !field.options &&
+            field.type !== 'textarea' &&
+            field.type !== 'checkbox'
+          "
+          [type]="field.type || 'text'"
+          [(ngModel)]="form[field.key]"
+          [name]="field.key"
+          [required]="field.required !== false" /><input
+          *ngIf="field.type === 'checkbox'"
+          type="checkbox"
+          [(ngModel)]="form[field.key]"
+          [name]="field.key" /></label
+      ><button [disabled]="busy">{{ busy ? "Saving…" : config.endpoint === "quotes" && !editing ? "Request quotation" : "Save" }}</button>
+    </form>
+    <div *ngIf="modal === 'delete'">
+      <h2>
+        Confirm deletion
+      </h2>
+      <p>This action affects record #{{ selected?.id }}.</p>
+      <button class="danger" [disabled]="busy" (click)="remove()">
+        Confirm
+      </button>
+    </div>
+    <form *ngIf="modal === 'action'" (ngSubmit)="runAction()">
+      <h2>{{ form.actionLabel }}</h2>
+      <p *ngIf="form.action === 'pay'" class="notice">
+        Sandbox payment only. No card details or real money are used.
+      </p>
+      <label *ngIf="form.action === 'return'"
+        >Required correction feedback<textarea
+          name="feedback"
+          [(ngModel)]="form.feedback"
+          required
+        ></textarea></label
+      ><label *ngIf="form.action === 'reply'"
+        >Reply<textarea
+          name="reply"
+          [(ngModel)]="form.reply"
+          required
+        ></textarea>
+      </label>
+      <p *ngIf="form.action === 'send'">
+        Sends to the in-app account and the configured email transport. Default
+        local mode stores the email in the outbox.
+      </p>
+      <button [disabled]="busy">Confirm {{ form.actionLabel }}</button>
+    </form>
+    <div *ngIf="modal === 'project'">
+      <h2>{{ selected.title }}</h2>
+      <p>Status: {{ selected.status }} · {{ selected.progress }}%</p>
+      <div *ngIf="role === 'PROJECT_MANAGER'">
+        <h3>Assign available designers</h3>
+        <div class="capacity-row" *ngFor="let d of designers">
+          <label>{{d.name}} · Maximum active projects<input type="number" min="1" max="100" [(ngModel)]="d.capacity" /></label>
+          <button class="quiet" (click)="saveCapacity(d)">Update capacity</button>
+        </div>
+        <label *ngFor="let d of designers"
+          ><input
+            type="checkbox"
+            [checked]="form.designers.includes(d.id)"
+            (change)="toggleDesigner(d.id, $event)"
+          />{{ d.name }} · {{ d.load }} / {{ d.capacity }} assigned</label
+        ><button [disabled]="busy" (click)="projectAction('team')">
+          Save assignments
+        </button>
+      </div>
+      <div *ngIf="role === 'DESIGNER'">
+        <label
+          >Progress (%)<input
+            type="number"
+            min="0"
+            max="100"
+            [(ngModel)]="form.progress" /></label
+        ><button [disabled]="busy" (click)="projectAction('progress')">
+          Update progress</button
+        ><label
+          >Upload type<select [(ngModel)]="form.kind">
+            <option>PROTOTYPE</option>
+            <option>ORIGINAL</option>
+          </select></label
+        ><label
+          >Upload file (up to 10 MB)<input
+            type="file"
+            accept=".png,.jpg,.jpeg,.pdf,.zip"
+            [disabled]="busy"
+            (change)="upload($event)"
+        /></label>
+      </div>
+      <div
+        *ngIf="
+          (role === 'CUSTOMER' && selected.status === 'CLIENT_REVIEW') ||
+          (role === 'PROJECT_MANAGER' && selected.status === 'DIRECTOR_REVIEW')
+        "
+      >
+        <label>Feedback<textarea [(ngModel)]="form.message"></textarea></label
+        ><label
+          ><input type="checkbox" [(ngModel)]="form.approved" />Approve
+          prototype</label
+        >
+        <p *ngIf="role === 'PROJECT_MANAGER'">
+          Your feedback is private to staff and designers.
+        </p>
+        <button [disabled]="busy" (click)="projectAction('review')">
+          Submit review
+        </button>
+      </div>
+      <h3>Project files</h3>
+      <div class="file" *ngFor="let asset of assets">
+        <span>{{ asset.originalName }} · {{ asset.kind }}</span
+        ><button *ngIf="originalUnlocked(asset)" (click)="downloadAsset(asset)">
+          Download</button
+        ><span class="badge" *ngIf="!originalUnlocked(asset)"
+          >Locked until payment + invoice delivery</span
+        >
+      </div>
+      <h3>Feedback history</h3>
+      <p *ngFor="let f of feedback">
+        {{ f.authorRole }}: {{ f.message }} ·
+        {{ f.approved ? "Approved" : "Changes requested" }}
+      </p>
+    </div>
+    <div *ngIf="modal === 'outbox'">
+      <h2>Email delivery log</h2>
+      <article *ngFor="let m of outbox">
+        <h3>{{ m.subject }}</h3>
+        <p>{{ m.recipient }} · {{ m.status }}</p>
+      </article>
+      <p *ngIf="!outbox.length">No emails yet.</p>
+    </div>
+  </section>
+</div>

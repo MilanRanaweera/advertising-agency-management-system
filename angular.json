@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "projects": {
+    "axiom": {
+      "projectType": "application",
+      "root": ".",
+      "sourceRoot": "application/frontend/src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/frontend",
+            "index": "application/frontend/src/index.html",
+            "browser": "application/frontend/src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "tsconfig.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "application/frontend/public",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "application/frontend/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "axiom:build:development",
+            "liveReload": false,
+            "hmr": false
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "d34bd994-63bc-489d-b710-cba281f01307"
+  }
+}
