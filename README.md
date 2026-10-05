@@ -1,4 +1,4 @@
-# AXIOM — Six-module full-stack student project
+# AXIOM 
 
 Angular 20 + Java 17 + Spring Boot 3.5 + PostgreSQL 16.
 
@@ -33,25 +33,6 @@ docker compose down
 
 Named volumes preserve PostgreSQL records and uploaded files. **Do not add `-v` unless you intentionally want to erase the project database and uploaded files.**
 
-## Demo sign-ins
-
-Administrator login: **`admin`** / **`admin@2026`**. All other demo accounts below use **`AxiomDemo123!`**. These are local demonstration accounts only. The admin account retains `admin@axiom.test` as its stored email; `admin` is its sign-in username.
-
-| Account | Role / responsibility |
-|---|---|
-| admin | User and access management (password: admin@2026) |
-| service_staff@axiom.test | Create services, packages, promotional offerings |
-| marketing_manager@axiom.test | Review and publish offerings |
-| quotation_staff@axiom.test | Generate and revise quotations |
-| finance_manager@axiom.test | Approve and send quotations and invoices |
-| project_manager@axiom.test | Start projects and assign designers |
-| designer@axiom.test | Progress, prototype and original uploads |
-| finance_staff@axiom.test | Payment requests and billing corrections |
-| communication_staff@axiom.test | Customer communication |
-| customer_relations_officer@axiom.test | Consultation confirmations |
-| customer@axiom.test | Briefs, reviews, payments and downloads |
-
-Sign out before switching roles. Reloading the browser signs you out: credentials stay in memory, not browser storage. Database records remain saved. You can create additional designers and customers from the admin account.
 
 ## Manual setup (without building Docker application images)
 
